@@ -34,6 +34,10 @@ function Transfer({ address, setBalance, message, setMessage, privateKey }) {
   async function transfer(evt) {
     evt.preventDefault();
     const messageHash = await hashMessage(message);
+    if (address.toLowerCase() === recipient.toLowerCase()) {
+      alert("can't send found to same address, chooose another");
+      return;
+  }
   
     try {
       const signature = await signTransaction(messageHash, privateKey);
@@ -45,15 +49,16 @@ function Transfer({ address, setBalance, message, setMessage, privateKey }) {
         recovery: signature.recovery.toString(),
       };
   
-      // Convertir el hash del mensaje a hexadecimal
-      const messageHashHex = Array.prototype.map.call(new Uint8Array(messageHash), x => ('00' + x.toString(16)).slice(-2)).join('');
+      // convert uint8Array(32) to hex, manually
+     /* const messageHashHex = Array.prototype.map.call(new Uint8Array(messageHash), x => ('00' + x.toString(16)).slice(-2)).join('');*/
+      const mestoHex = toHex(messageHash)
   
       const response = await server.post(`send`, {
         sender: address,
-        amount: sendAmount.toString(), // Convertir BigInt a cadena
+        amount: sendAmount.toString(), 
         recipient,
-        hash: messageHashHex, // Utilizar el hash del mensaje en hexadecimal
-        sign: JSON.stringify(signatureHex), // Convertir la firma a JSON
+        hash: mestoHex, 
+        sign: JSON.stringify(signatureHex), 
       });
   
       const { balance } = response.data;
@@ -68,24 +73,26 @@ function Transfer({ address, setBalance, message, setMessage, privateKey }) {
       <h1>Send Transaction</h1>
 
       <label>
-        Send Amount
+        <p className="text">Send Amount</p>
         <input
           placeholder="1, 2, 3..."
           value={sendAmount}
           onChange={setValue(setSendAmount)}
+          name="amount"
         ></input>
-      </label>
+      </label >
       <label>
-        Your Message
-        <input placeholder="Type in your Message" value={message} onChange={handleHashMessage}></input>
+        <p className="text">Your Message</p>
+        <input placeholder="Type in your Message" value={message} onChange={handleHashMessage} name="message"></input>
       </label>
-      <div>Hash: {messageHashForSign}</div>
+      <div className="address">Hash: {messageHashForSign}</div>
       <label>
-        Recipient
+        <p className="text">Recipient</p>
         <input
           placeholder="Type an address, for example: 0x2"
           value={recipient}
           onChange={setValue(setRecipient)}
+          name="recipient"
         ></input>
       </label>
 

@@ -1,6 +1,6 @@
 const express = require("express");
 const {secp256k1} = require("ethereum-cryptography/secp256k1.js")
-const { toHex, hexToBytes } = require("ethereum-cryptography/utils")
+const { hexToBytes } = require("ethereum-cryptography/utils")
 const app = express();
 const cors = require("cors");
 const port = 3042;
@@ -27,18 +27,14 @@ app.get("/balance/:address", (req, res) => {
 app.post("/send", (req, res) => {
   const { sender, recipient, amount, hash, sign } = req.body;
 
-  console.log("Received POST request to /send");
   console.log("Request body:", req.body);
-
+  if( sender !== recipient){
   const hashBytes = hexToBytes(hash);
 
   const signObj = JSON.parse(sign);
   const r = BigInt(`0x${signObj.r}`);
   const s = BigInt(`0x${signObj.s}`);
   const recovery = parseInt(signObj.recovery, 10);
-
-  console.log("hashBytes", hashBytes);
-  
 
   try {
     // Verify signature
@@ -60,7 +56,18 @@ app.post("/send", (req, res) => {
     console.error("Verification error:", error);
     res.status(500).send({ message: "Internal Server Error" });
   }
+  }else{
+    res.status(400).send({message: "Recipient and sender must be differents addresses"})
+  }  
 });
+
+app.put("/create", (req,res) =>{
+
+})
+
+app.get("/allaccounts", (req,res)=> {
+  res.status(200).send(balances)
+})
 
 app.listen(port, () => {
   console.log(`Listening on port ${port}!`);
