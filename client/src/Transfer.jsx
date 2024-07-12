@@ -8,14 +8,13 @@ import {secp256k1} from "ethereum-cryptography/secp256k1";
 function Transfer({ address, setBalance, message, setMessage, privateKey }) {
   const [sendAmount, setSendAmount] = useState("0"); // Inicializar como cadena
   const [recipient, setRecipient] = useState("");
-  const [messageHashForSign, setMessageHashForSign] = useState(new Uint8Array(0));
-
+ 
+  const [messageHex,setMessageHex] = useState("");
   const setValue = (setter) => (evt) => setter(evt.target.value);
 
   async function hashMessage(message) {
     const messageBytes = utf8ToBytes(message);
     const messageSHA = keccak256(messageBytes);
-    setMessageHashForSign(messageSHA);
     return messageSHA;
   }
 
@@ -23,7 +22,7 @@ function Transfer({ address, setBalance, message, setMessage, privateKey }) {
     const newMessage = evt.target.value;
     setMessage(newMessage);
     const hashedMessage = await hashMessage(newMessage);
-    setMessageHashForSign(hashedMessage);
+    setMessageHex(toHex(hashedMessage));
   }
 
   async function signTransaction(messageHash, privateKey) {
@@ -34,6 +33,7 @@ function Transfer({ address, setBalance, message, setMessage, privateKey }) {
   async function transfer(evt) {
     evt.preventDefault();
     const messageHash = await hashMessage(message);
+ 
     if (address.toLowerCase() === recipient.toLowerCase()) {
       alert("can't send found to same address, chooose another");
       return;
@@ -51,13 +51,12 @@ function Transfer({ address, setBalance, message, setMessage, privateKey }) {
   
       // convert uint8Array(32) to hex, manually
      /* const messageHashHex = Array.prototype.map.call(new Uint8Array(messageHash), x => ('00' + x.toString(16)).slice(-2)).join('');*/
-      const mestoHex = toHex(messageHash)
   
       const response = await server.post(`send`, {
         sender: address,
         amount: sendAmount.toString(), 
         recipient,
-        hash: mestoHex, 
+        hash:messageHex, 
         sign: JSON.stringify(signatureHex), 
       });
   
@@ -85,7 +84,7 @@ function Transfer({ address, setBalance, message, setMessage, privateKey }) {
         <p className="text">Your Message</p>
         <input placeholder="Type in your Message" value={message} onChange={handleHashMessage} name="message"></input>
       </label>
-      <div className="address">Hash: {messageHashForSign}</div>
+      <div className="address">Hash: {messageHex}</div>
       <label>
         <p className="text">Recipient</p>
         <input
